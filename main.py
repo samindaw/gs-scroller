@@ -90,7 +90,9 @@ def convert_google_sheet(sid, gid):
             "var $metatable = create_metatable($table); "
             "$('body').empty().append($metatable); "
             "$metatable.resize(); "
-        " }" )
+        " }" 
+        "$('.row-header-wrapper').remove()"        
+        )
     html.find('body').append(script)
     return b'<!DOCTYPE html>\n<meta charset="UTF-8">\n' + \
         lxml.html.tostring(html, encoding='utf-8')
