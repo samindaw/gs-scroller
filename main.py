@@ -23,20 +23,34 @@ app.url_map.converters['digitlist'] = DigitListConverter
 def default():
     return render_template('default.html')
 
+@app.route('/e/<base64:sid>/<digits:gid>/<options>')
+def sheet_e_opt(sid, gid, options):
+    # print('/e/<base64:sid>/<digits:gid>/<options>')
+    return sheet_opt(sid, gid, options)
+ 
 @app.route('/e/<base64:sid>/<digits:gid>')
 def sheet_e(sid, gid):
+    # print('/e/<base64:sid>/<digits:gid>')
     return sheet(sid="e/"+sid, gid=gid)
+
+@app.route('/<base64:sid>/<digits:gid>/<options>')
+def sheet_opt(sid, gid, options):
+    # print('/<base64:sid>/<digits:gid>/<options>')
+    return convert_google_sheet(sid, gid, options)
 
 @app.route('/<base64:sid>/<digits:gid>')
 def sheet(sid, gid):
-    return convert_google_sheet(sid, gid)
+    # print('/<base64:sid>/<digits:gid>')
+    return convert_google_sheet(sid, gid,"")
 
 @app.route('/e/<base64:sid>/')
 def spreadsheet_e(sid):
+    # print('/e/<base64:sid>/')
     return spreadsheet(sid="e/"+sid)
 
 @app.route('/<base64:sid>/')
 def spreadsheet(sid):
+    print('/<base64:sid>/')
     title, sheets = google_spreadsheet_data(sid)
     if not sheets:
         raise GoogleSpreadsheetNotFound()
@@ -45,10 +59,12 @@ def spreadsheet(sid):
 
 @app.route('/e/<base64:sid>/(<digitlist:gids>)')
 def spreadsheet_selection_e(sid, gids):
+    # print('/e/<base64:sid>/(<digitlist:gids>)')
     return spreadsheet_selection(sid="e/"+sid, gids=gids)
 
 @app.route('/<base64:sid>/(<digitlist:gids>)')
 def spreadsheet_selection(sid, gids):
+    print('/<base64:sid>/(<digitlist:gids>)')
     try:
         title, sheets = google_spreadsheet_data(sid)
     except GoogleSpreadsheetNotResponding as error:
@@ -64,10 +80,10 @@ def spreadsheet_selection(sid, gids):
         sid=sid, sheets=sheets, )
 
 @temporary_cache(60*5)
-def convert_google_sheet(sid, gid):
+def convert_google_sheet(sid, gid, options):
     html = parse_google_document(
-        'https://docs.google.com/spreadsheets/d/{sid}/pubhtml/sheet?gid={gid}'
-            .format(sid=sid, gid=gid),
+        'https://docs.google.com/spreadsheets/d/{sid}/htmlembed/sheet?gid={gid}&{options}'
+            .format(sid=sid, gid=gid, options=options),
         errhelp={'sid' : sid, 'gid' : gid} )
     for script in html.iter('script'):
         script.getparent().remove(script)
@@ -91,9 +107,14 @@ def convert_google_sheet(sid, gid):
             "$('body').empty().append($metatable); "
             "$metatable.resize(); "
         " }" 
-        "$('.row-header-wrapper').remove()"        
+        # "$(function() {" 
+        "$('.row-header-wrapper').remove();"  
+        # "});"
         )
     html.find('body').append(script)
+    # with open("Output.txt", "w") as text_file:
+    #     text_file.write(lxml.html.tostring(html, encoding='utf-8'))
+    
     return b'<!DOCTYPE html>\n<meta charset="UTF-8">\n' + \
         lxml.html.tostring(html, encoding='utf-8')
 
@@ -124,6 +145,7 @@ def google_spreadsheet_data(sid):
 PARSER = lxml.html.HTMLParser(encoding="utf-8")
 def parse_google_document(url, errhelp=None, parser=PARSER):
     try:
+        # print(url)
         reply_text = urlread.urlread(url, timeout=GOOGLE_TIMEOUT)
     except urlread.NotFound:
         raise GoogleSpreadsheetNotFound(errhelp)
