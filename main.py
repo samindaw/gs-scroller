@@ -50,7 +50,7 @@ def spreadsheet_e(sid):
 
 @app.route('/<base64:sid>/')
 def spreadsheet(sid):
-    print('/<base64:sid>/')
+    # print('/<base64:sid>/')
     title, sheets = google_spreadsheet_data(sid)
     if not sheets:
         raise GoogleSpreadsheetNotFound()
@@ -64,7 +64,7 @@ def spreadsheet_selection_e(sid, gids):
 
 @app.route('/<base64:sid>/(<digitlist:gids>)')
 def spreadsheet_selection(sid, gids):
-    print('/<base64:sid>/(<digitlist:gids>)')
+    # print('/<base64:sid>/(<digitlist:gids>)')
     try:
         title, sheets = google_spreadsheet_data(sid)
     except GoogleSpreadsheetNotResponding as error:
@@ -107,9 +107,8 @@ def convert_google_sheet(sid, gid, options):
             "$('body').empty().append($metatable); "
             "$metatable.resize(); "
         " }" 
-        # "$(function() {" 
         "$('.row-header-wrapper').remove();"  
-        # "});"
+        "$('td').css('min-width', '100px');"
         )
     html.find('body').append(script)
     # with open("Output.txt", "w") as text_file:
