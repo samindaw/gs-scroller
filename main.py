@@ -79,7 +79,7 @@ def spreadsheet_selection(sid, gids):
     return render_template('spreadsheet.html', title=title, links=False,
         sid=sid, sheets=sheets, )
 
-@temporary_cache(60*5)
+# @temporary_cache(60*5)
 def convert_google_sheet(sid, gid, options):
     html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/htmlembed/sheet?gid={gid}&{options}'
@@ -108,11 +108,22 @@ def convert_google_sheet(sid, gid, options):
             "$metatable.resize(); "
         " }" 
         "$('.row-header-wrapper').remove();"  
-        "$('td').css('min-width', '100px');"
+        #"$('td').css('min-width', '100px');"
+        "$(window).bind('load', function() {"
+        "i=1;"
+        "tableWidth=0;"
+        "while (true) {  idStr = '#0C'+i.toString(); obj = $(idStr); if (obj[0]==undefined) {break;}; console.log(obj[0].style.width); wstr=obj[0].style.width.replace('px', ''); tableWidth+=parseInt(wstr); i++; }"
+        "console.log(tableWidth);"
+        "tblList = $('table.waffle');"
+        "console.log(tblList[1]);"
+        "tblList[1].style.width=tableWidth.toString()+'px';"   
+        "tblList[3].style.width=tableWidth.toString()+'px';"   
+        "});"
+
         )
     html.find('body').append(script)
-    # with open("Output.txt", "w") as text_file:
-    #     text_file.write(lxml.html.tostring(html, encoding='utf-8'))
+    with open("output.txt", "w") as text_file:
+        text_file.write(lxml.html.tostring(html, encoding='utf-8'))
     
     return b'<!DOCTYPE html>\n<meta charset="UTF-8">\n' + \
         lxml.html.tostring(html, encoding='utf-8')
@@ -123,7 +134,7 @@ SHEET_PATTERN = re.compile(
     r'[^{}]*'
         r'gid: "(?P<gid>\d+)"'
     r'[^{}]*}' )
-@temporary_cache(60*5)
+# @temporary_cache(60*5)
 def google_spreadsheet_data(sid):
     html = parse_google_document(
         'https://docs.google.com/spreadsheets/d/{sid}/pubhtml?widget=true'
@@ -180,5 +191,5 @@ def not_found(exception):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=False)
+    app.run(host='0.0.0.0', port=8080, debug=True)
 

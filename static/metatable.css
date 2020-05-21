@@ -1,6 +1,8 @@
 .metatable {
   border: 0; padding: 0; margin: 0;
-  border-collapse: collapse;
+  border-collapse: separate;
+  table-layout: fixed;
+ 
 }
 
   .metatable__cell {
