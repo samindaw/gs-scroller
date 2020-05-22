@@ -86,7 +86,13 @@ def convert_google_sheet(sid, gid, options):
             .format(sid=sid, gid=gid, options=options),
         errhelp={'sid' : sid, 'gid' : gid} )
     for script in html.iter('script'):
-        script.getparent().remove(script)
+        v = script.get('src')
+        if v is None:
+            #pass #script.getparent().remove(script)
+            script.text = script.text.replace("CHARTS_EXPORT_URI.push('","CHARTS_EXPORT_URI.push('https://docs.google.com")
+        else:
+            script.set('src',"https://docs.google.com"+v)
+        
     html.find('head/link').rewrite_links(
         lambda s: 'https://docs.google.com' + s )
     html.find('head').append(lxml.html.Element( 'link',
@@ -116,12 +122,13 @@ def convert_google_sheet(sid, gid, options):
         "tblList = $('table.waffle');"
         "tblList[1].style.width=tableWidth.toString()+'px';"   
         "tblList[3].style.width=tableWidth.toString()+'px';"   
-        "});"
+        "initCharts();"
 
+        "});"
         )
     html.find('body').append(script)
-    with open("output.txt", "w") as text_file:
-        text_file.write(lxml.html.tostring(html, encoding='utf-8'))
+    # with open("output.txt", "w") as text_file:
+    #     text_file.write(lxml.html.tostring(html, encoding='utf-8'))
     
     return b'<!DOCTYPE html>\n<meta charset="UTF-8">\n' + \
         lxml.html.tostring(html, encoding='utf-8')
@@ -189,5 +196,5 @@ def not_found(exception):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=False)
 
